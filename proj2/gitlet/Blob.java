@@ -10,16 +10,16 @@ import java.io.Serializable;
 public class Blob implements Serializable {
 
     /** the global unique SHA-1 id of blob */
-    private String hashID;
+    private final String hashID;
 
     /** the name of the modified file */
-    private String name;
+    private final String name;
 
     /**  store the content which read from file as byte[] */
-    private byte[] content;
+    private final byte[] content;
 
     /**  store the content which read from file as String */
-    private String contentAsString;
+    private final String contentAsString;
 
     /**
      * Constructor of Blob
