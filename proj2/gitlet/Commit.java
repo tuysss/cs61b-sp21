@@ -51,7 +51,7 @@ public class Commit {
     }
 
     /**
-     *
+     * Commit constructor called by "commit" command.
      * @param message
      * @param parentsId
      * @param branch
@@ -67,6 +67,12 @@ public class Commit {
                 "EEE MMM d HH:mm:ss yyyy xxxx",Locale.ENGLISH));
         generateHashId();
     }
+
+    /**
+     * using sha-1 algorithm, generate uid of commit,
+     * with its message+timestamp+BlobToString+parentToString
+     * @return hashId of this commit object
+     */
     private String generateHashId(){
         String BlobToString="";
         String parentToString= Arrays.toString(parents);
