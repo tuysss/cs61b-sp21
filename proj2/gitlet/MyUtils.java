@@ -1,5 +1,6 @@
 package gitlet;
 import java.io.File;
+import java.io.Serializable;
 
 import static gitlet.Utils.*;
 
@@ -28,10 +29,23 @@ public class MyUtils {
      * @param id the hashid/uid of commit or blob
      * @return the specific file that stores the object
      */
-    public static File getObjectFile(String id){
+    public static File getObjectFromFile(String id){
         String dirName=getObjectDirName(id);
         String fileName=getObjectFileName(id);
         return join(Repository.OBJECTS_DIR,dirName,fileName);
+    }
+
+    /**
+     * Save the serializable object to the file path.
+     * @param file
+     * @param obj
+     */
+    public static void saveObjectToFile(File file, Serializable obj){
+        File dir=file.getParentFile();
+        if(!dir.exists()){
+            mkdir(dir);
+        }
+        writeObject(file,obj);
     }
 
     /**
