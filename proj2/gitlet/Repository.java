@@ -74,7 +74,7 @@ public class Repository {
      * the global shared same commit for repo init.
      */
     private static void createInitialCommit(){
-        Commit initCommit=new Commit("initial commit");
+        Commit initCommit=new Commit();
         initCommit.save();
         setBranchHeadCommit(DEFAULT_BRANCH_NAME,initCommit.getHashID());
     }

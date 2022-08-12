@@ -1,14 +1,11 @@
 package gitlet;
 
-// TODO: any imports you need here
 
 import java.io.File;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.TreeMap;
+import java.util.*;
 
 import static gitlet.MyUtils.*;
 import static gitlet.Utils.*;
@@ -23,25 +20,25 @@ public class Commit implements Serializable{
     /** the global unique id calculated by SHA-1 algorithm */
     private String hashID;
 
-    /** format: 00:00:00 UTC, Thursday, 1 January 1970 */
-    private String timestamp;
+    /** time that commit being created */
+    private Date timestamp;
 
     /** the list of parent commits uniquely identified by its hashID ,
      * will be called by "gitlet reset" command */
-    private String[] parents;
+    private List<String> parents;
 
     /** the branch(head of commit list) of the commit,
-     * identified by its hashID     */
+     * identified by name     */
     private String branch;
 
     /** blobs that tracked by this commit
      */
-    private TreeMap<String, Blob> blobs;
+    private Map<String, Blob> blobs;
 
     /**
      * File to persistent this commit into.
      */
-    private  final File file;
+    private final File file;
 
 
     /**
@@ -49,13 +46,13 @@ public class Commit implements Serializable{
      * All repositories will automatically share this commit (have the same UID)
      * and all commits in all repositories will trace back to it.
      */
-    public Commit(String message){
-        this.message=message;
-        timestamp="00:00:00 UTC, Thursday, 1 January 1970";
+    public Commit(){
+        this.message="initial commit";
+        timestamp=new Date(0);
         hashID=generateHashId();
-        branch=hashID;
-        parents =null;
-        blobs=null;
+        branch="master";
+        parents =new LinkedList<>();
+        blobs=new TreeMap<>();
         file=getObjectFile(this.hashID);
     }
 
@@ -66,14 +63,12 @@ public class Commit implements Serializable{
      * @param branch
      * @param blobs
      */
-    public Commit(String message,String[] parentsId,String branch,TreeMap<String,Blob> blobs){
+    public Commit(String message,List<String> parentsId,String branch,TreeMap<String,Blob> blobs){
         this.message=message;
         this.parents=parentsId;
         this.branch=branch;
         this.blobs=blobs;
-        ZonedDateTime now=ZonedDateTime.now();
-        this.timestamp=now.format(DateTimeFormatter.ofPattern(
-                "EEE MMM d HH:mm:ss yyyy xxxx",Locale.ENGLISH));
+        this.timestamp=new Date();
         generateHashId();
         file=getObjectFile(this.hashID);
     }
@@ -92,7 +87,7 @@ public class Commit implements Serializable{
      */
     private String generateHashId(){
         String BlobToString="";
-        String parentToString= Arrays.toString(parents);
+        String parentToString= Arrays.toString(new List[]{parents});
         if(blobs!=null){
             BlobToString=blobs.toString();
         }
@@ -108,11 +103,11 @@ public class Commit implements Serializable{
         return hashID;
     }
 
-    public String getTimestamp() {
+    public Date getTimestamp() {
         return timestamp;
     }
 
-    public String[] getParents() {
+    public List<String> getParents() {
         return parents;
     }
 
@@ -120,7 +115,7 @@ public class Commit implements Serializable{
         return branch;
     }
 
-    public TreeMap<String, Blob> getBlobs() {
+    public Map<String, Blob> getBlobs() {
         return blobs;
     }
 
