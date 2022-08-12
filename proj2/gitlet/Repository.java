@@ -99,7 +99,7 @@ public class Repository {
     }
 
     /**
-     * branch-head-file consists of []
+     * branch file is named by its name.
      * @param branchName
      * @return
      */

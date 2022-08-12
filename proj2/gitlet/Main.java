@@ -17,7 +17,6 @@ public class Main {
             case "init":
                 validateNumArgs(args,1);
                 Repository.init();
-                break;
             case "add":
                 // TODO: handle the `add [filename]` command
                 break;
