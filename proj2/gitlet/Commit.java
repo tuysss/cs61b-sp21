@@ -3,8 +3,8 @@ package gitlet;
 
 import java.io.File;
 import java.io.Serializable;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static gitlet.MyUtils.*;
@@ -15,25 +15,26 @@ import static gitlet.Utils.*;
 public class Commit implements Serializable{
 
     /** The message of this Commit. */
-    private String message;
+    private final String message;
 
     /** the global unique id calculated by SHA-1 algorithm */
-    private String hashID;
+    private final String hashId;
 
     /** time that commit being created */
-    private Date timestamp;
+    private final Date date;
 
     /** the list of parent commits uniquely identified by its hashID ,
      * will be called by "gitlet reset" command */
-    private List<String> parents;
+    private final List<String> parents;
 
     /** the branch(head of commit list) of the commit,
-     * identified by name     */
-    private String branch;
+     * identified by name
+    private final String branch;
+     放到外部，repo中记录 */
 
     /** blobs that tracked by this commit
      */
-    private Map<String, Blob> blobs;
+    private final Map<String, Blob> blobs;
 
     /**
      * File to persistent this commit into.
@@ -48,12 +49,11 @@ public class Commit implements Serializable{
      */
     public Commit(){
         this.message="initial commit";
-        timestamp=new Date(0);
-        hashID=generateHashId();
-        branch="master";
-        parents =new LinkedList<>();
+        date =new Date(0);
+        parents =new ArrayList<>();
         blobs=new TreeMap<>();
-        file=getObjectFile(this.hashID);
+        hashId =generateHashId();
+        file=getObjectFile(this.hashId);
     }
 
     /**
@@ -66,18 +66,21 @@ public class Commit implements Serializable{
     public Commit(String message,List<String> parentsId,String branch,TreeMap<String,Blob> blobs){
         this.message=message;
         this.parents=parentsId;
-        this.branch=branch;
         this.blobs=blobs;
-        this.timestamp=new Date();
-        generateHashId();
-        file=getObjectFile(this.hashID);
+        this.date =new Date();
+        this.hashId = generateHashId();
+        file=getObjectFile(this.hashId);
     }
 
     /**
      *  persistence the commit into .gitlet/objects folder
      */
-    public  void save(){
+    public void save(){
         writeObject(file,this);
+    }
+
+    public Commit getCommitFromFile(String id){
+        return readObject(getObjectFile(id),Commit.class);
     }
 
     /**
@@ -86,34 +89,27 @@ public class Commit implements Serializable{
      * @return hashId of this commit object
      */
     private String generateHashId(){
-        String BlobToString="";
-        String parentToString= Arrays.toString(new List[]{parents});
-        if(blobs!=null){
-            BlobToString=blobs.toString();
-        }
-        String contentOfHash=message+timestamp+BlobToString+parentToString;
-        return sha1(contentOfHash);
+        return sha1(getTimestamp(),message,parents.toString(),blobs.toString());
     }
 
     public String getMessage() {
         return message;
     }
 
-    public String getHashID() {
-        return hashID;
+    public String getHashId() {
+        return hashId;
     }
 
-    public Date getTimestamp() {
-        return timestamp;
+    public String getTimestamp() {
+        // Thu Jan 1 00:00:00 1970 +0000
+        DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
+        return dateFormat.format(date);
     }
 
     public List<String> getParents() {
         return parents;
     }
 
-    public String getBranch() {
-        return branch;
-    }
 
     public Map<String, Blob> getBlobs() {
         return blobs;

@@ -76,7 +76,7 @@ public class Repository {
     private static void createInitialCommit(){
         Commit initCommit=new Commit();
         initCommit.save();
-        setBranchHeadCommit(DEFAULT_BRANCH_NAME,initCommit.getHashID());
+        setBranchHeadCommit(DEFAULT_BRANCH_NAME,initCommit.getHashId());
     }
 
     /**
