@@ -60,10 +60,9 @@ public class Commit implements Serializable{
      * Commit constructor called by "commit" command.
      * @param message
      * @param parentsId
-     * @param branch
      * @param blobs
      */
-    public Commit(String message,List<String> parentsId,String branch,TreeMap<String,Blob> blobs){
+    public Commit(String message,List<String> parentsId,Map<String,Blob> blobs){
         this.message=message;
         this.parents=parentsId;
         this.blobs=blobs;

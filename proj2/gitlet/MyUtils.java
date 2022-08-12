@@ -31,7 +31,7 @@ public class MyUtils {
     public static File getObjectFile(String id){
         String dirName=getObjectDirName(id);
         String fileName=getObjectFileName(id);
-        return join(Repository.GITLET_DIR,dirName,fileName);
+        return join(Repository.OBJECTS_DIR,dirName,fileName);
     }
 
     /**
