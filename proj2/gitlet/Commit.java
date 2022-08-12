@@ -75,7 +75,7 @@ public class Commit implements Serializable{
      *  persistence the commit into .gitlet/objects folder
      */
     public void save(){
-        writeObject(file,this);
+        saveObjectToFile(file,this);
     }
 
     public Commit getCommitFromFile(String id){
