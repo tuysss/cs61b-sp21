@@ -2,17 +2,20 @@ package gitlet;
 
 // TODO: any imports you need here
 
+import java.io.File;
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.TreeMap;
 
-import static gitlet.Utils.sha1;
+import static gitlet.MyUtils.*;
+import static gitlet.Utils.*;
 
 /** Represents a gitlet commit object.
  */
-public class Commit {
+public class Commit implements Serializable{
 
     /** The message of this Commit. */
     private String message;
@@ -35,6 +38,11 @@ public class Commit {
      */
     private TreeMap<String, Blob> blobs;
 
+    /**
+     * File to persistent this commit into.
+     */
+    private  final File file;
+
 
     /**
      * Commit constructer called by "init" command.
@@ -48,6 +56,7 @@ public class Commit {
         branch=hashID;
         parents =null;
         blobs=null;
+        file=getObjectFile(this.hashID);
     }
 
     /**
@@ -66,6 +75,14 @@ public class Commit {
         this.timestamp=now.format(DateTimeFormatter.ofPattern(
                 "EEE MMM d HH:mm:ss yyyy xxxx",Locale.ENGLISH));
         generateHashId();
+        file=getObjectFile(this.hashID);
+    }
+
+    /**
+     *  persistence the commit into .gitlet/objects folder
+     */
+    public  void save(){
+        writeObject(file,this);
     }
 
     /**
@@ -83,7 +100,31 @@ public class Commit {
         return sha1(contentOfHash);
     }
 
+    public String getMessage() {
+        return message;
+    }
 
+    public String getHashID() {
+        return hashID;
+    }
 
+    public String getTimestamp() {
+        return timestamp;
+    }
 
+    public String[] getParents() {
+        return parents;
+    }
+
+    public String getBranch() {
+        return branch;
+    }
+
+    public TreeMap<String, Blob> getBlobs() {
+        return blobs;
+    }
+
+    public File getFile() {
+        return file;
+    }
 }
