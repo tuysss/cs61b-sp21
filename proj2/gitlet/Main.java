@@ -18,9 +18,17 @@ public class Main {
                 validateNumArgs(args,1);
                 Repository.init();
             case "add":
-                // TODO: handle the `add [filename]` command
+                Repository.checkWorkingDir();
+                validateNumArgs(args,2);
+                String fileName=args[1];
+                new Repository().add(fileName);
                 break;
-            // TODO: FILL THE REST IN
+            case "commit":
+                Repository.checkWorkingDir();
+                validateNumArgs(args,2);
+                String msg=args[1];
+                new Repository().commit(msg);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 break;

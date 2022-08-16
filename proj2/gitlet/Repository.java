@@ -210,6 +210,7 @@ public class Repository {
         setBranchHeadCommit(currentBranch.get(),newCommit.getHashId());
     }
 
+
     /**
      * Get a file instance from CWD by file name.
      * @param fileName
@@ -219,6 +220,15 @@ public class Repository {
         return Paths.get(fileName).isAbsolute()?
                 new File(fileName):
                 join(CWD,fileName);
+    }
+
+    /**
+     *  Pre check for git preforms.
+     */
+    public static void checkWorkingDir(){
+        if(!GITLET_DIR.exists()||!GITLET_DIR.isDirectory()){
+            exit("Not in an initialized Gitlet directory.");
+        }
     }
 
 }
