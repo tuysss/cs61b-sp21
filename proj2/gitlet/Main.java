@@ -26,8 +26,11 @@ public class Main {
             case "commit":
                 Repository.checkWorkingDir();
                 validateNumArgs(args,2);
-                String msg=args[1];
-                new Repository().commit(msg);
+                String message=args[1];
+                if (message.length() == 0) {
+                    exit("Please enter a commit message.");
+                }
+                new Repository().commit(message);
                 break;
             default:
                 System.out.println("No command with that name exists.");
