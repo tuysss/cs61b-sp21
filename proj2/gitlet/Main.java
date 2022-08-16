@@ -17,6 +17,7 @@ public class Main {
             case "init":
                 validateNumArgs(args,1);
                 Repository.init();
+                break;
             case "add":
                 Repository.checkWorkingDir();
                 validateNumArgs(args,2);
