@@ -1,6 +1,12 @@
 package gitlet;
 
 import java.io.File;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static gitlet.Utils.*;
 import static gitlet.MyUtils.*;
 
@@ -40,14 +46,68 @@ public class Repository {
 
 
     /**
+     * The current branch name.
+     */
+    private final Lazy<String> currentBranch=lazy(()->{
+       String HEADFileContent=readContentsAsString(HEAD);
+       return HEADFileContent.replace(HEADFileContent,"");
+    });
+
+    /**
+     * The commit that HEAD points to.
+     */
+    private final Lazy<Commit> HEADCommit = lazy(() -> getBranchHeadCommit(currentBranch.get()));
+
+    /**
+     * The staging area instance. Initialized in the constructor.
+     */
+    private final Lazy<StagingArea> stagingArea = lazy(() -> {
+        StagingArea s = INDEX.exists()
+                ? StagingArea.fromFile()
+                : new StagingArea();
+        s.setTracked(HEADCommit.get().getTracked());
+        return s;
+    });
+
+    /**
+     * Get commit of head of branch with branch name. Helper of #HEADCommit
+     * @param branchName
+     * @return Commit obj
+     */
+    private static Commit getBranchHeadCommit(String branchName){
+        File branchHeadFile=getBranchHeadFile(branchName);
+        return getBranchHeadCommit(branchHeadFile);
+    }
+
+    /**
+     * Helper of .getBranchHeadCommit(String branchName)
+     * @param branchHeadFile
+     * @return
+     */
+    private static Commit getBranchHeadCommit(File branchHeadFile){
+        String headCommitId=readContentsAsString(branchHeadFile);
+        return Commit.getCommitFromFile(headCommitId);
+    }
+
+    /**
+     * Helper of .getBranchHeadCommit(String branchName)
+     * @param branchName
+     * @return
+     */
+    private static File getBranchHeadFile(String branchName){
+        return join(BRANCH_HEADS_DIR,branchName);
+    }
+
+
+    /**
      * Initialize a repo at the current directory.
      *
      * .gitlet/          -- top level folder for all persistent data in your lab12 folder
      *    - objects/     -- folder containing all persistent data for blobs and commits
      *    - refs/        -- stores pointers into commit objects in that data
-     *          - heads/ -- pointers to the heads of lists of commits
-     *    - HEAD         -- points to the branch you currently have checked out
-     *    - index        -- stores staging area
+     *          - heads/ -- pointers to the heads of branch
+     *    - HEAD         -- the branch you currently have checked out (prefix+branch name)
+     *    - index        -- stores stagingArea
      */
      public static void init(){
         if(GITLET_DIR.exists()){
@@ -105,6 +165,60 @@ public class Repository {
      */
     private static File getBranchFile(String branchName){
         return join(BRANCH_HEADS_DIR,branchName);
+    }
+
+    /**
+     * Perform "add" command.
+     * @param fileName
+     */
+    public void add(String fileName){
+        File file=getFileFromCWD(fileName);
+        if(!file.exists()){
+            exit("File does not exist.");
+        }
+        if(stagingArea.get().add(file)){
+            stagingArea.get().save();
+        }
+    }
+
+    /**
+     * Perform "commit" command.
+     * @param msg
+     */
+    public void commit(String msg){
+       commit(msg,null);
+    }
+
+    /**
+     * Perform a commit with message and two parents.
+     * @param msg          Commit msg
+     * @param secondParent second parent Commit SHA1 id.
+     */
+    private void commit(String msg,String secondParent){
+        if(stagingArea.get().isClean()){
+            exit("No changing added to the commit.");
+        }
+        Map<String,String> newTrackedFileMap=stagingArea.get().getTracked();
+        stagingArea.get().save();
+        List<String> parents=new ArrayList<>();
+        parents.add(HEADCommit.get().getHashId());
+        if(secondParent!=null){
+            parents.add(secondParent);
+        }
+        Commit newCommit=new Commit(msg,parents,newTrackedFileMap);
+        newCommit.save();
+        setBranchHeadCommit(currentBranch.get(),newCommit.getHashId());
+    }
+
+    /**
+     * Get a file instance from CWD by file name.
+     * @param fileName
+     * @return File instance
+     */
+    private File getFileFromCWD(String fileName){
+        return Paths.get(fileName).isAbsolute()?
+                new File(fileName):
+                join(CWD,fileName);
     }
 
 }

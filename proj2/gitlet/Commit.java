@@ -23,24 +23,22 @@ public class Commit implements Serializable{
     /** time that commit being created */
     private final Date date;
 
-    /** the list of parent commits uniquely identified by its hashID ,
-     * will be called by "gitlet reset" command */
+    /**
+     *  last commits of this with SHA1 id.
+     *  By default, one parent.
+     *  If there is a merge, then two.
+     */
     private final List<String> parents;
 
-    /** the branch(head of commit list) of the commit,
-     * identified by name
-    private final String branch;
-     放到外部，repo中记录 */
-
-    /** blobs that tracked by this commit
+    /** blobs that tracked by this commit,
+     * map of file path as key and SHA1 id as value
      */
-    private final Map<String, Blob> blobs;
+    private final Map<String, String> tracked;
 
     /**
      * File to persistent this commit into.
      */
     private final File file;
-
 
     /**
      * Commit constructer called by "init" command.
@@ -51,7 +49,7 @@ public class Commit implements Serializable{
         this.message="initial commit";
         date =new Date(0);
         parents =new ArrayList<>();
-        blobs=new TreeMap<>();
+        tracked =new TreeMap<>();
         hashId =generateHashId();
         file= getObjectFromFile(this.hashId);
     }
@@ -59,13 +57,13 @@ public class Commit implements Serializable{
     /**
      * Commit constructor called by "commit" command.
      * @param message
-     * @param parentsId
-     * @param blobs
+     * @param parents
+     * @param tracked
      */
-    public Commit(String message,List<String> parentsId,Map<String,Blob> blobs){
+    public Commit(String message,List<String> parents,Map<String,String> tracked){
         this.message=message;
-        this.parents=parentsId;
-        this.blobs=blobs;
+        this.parents=parents;
+        this.tracked =tracked;
         this.date =new Date();
         this.hashId = generateHashId();
         file= getObjectFromFile(this.hashId);
@@ -78,7 +76,7 @@ public class Commit implements Serializable{
         saveObjectToFile(file,this);
     }
 
-    public Commit getCommitFromFile(String id){
+    public static Commit getCommitFromFile(String id){
         return readObject(getObjectFromFile(id),Commit.class);
     }
 
@@ -88,7 +86,7 @@ public class Commit implements Serializable{
      * @return hashId of this commit object
      */
     private String generateHashId(){
-        return sha1(getTimestamp(),message,parents.toString(),blobs.toString());
+        return sha1(getTimestamp(),message,parents.toString(), tracked.toString());
     }
 
     public String getMessage() {
@@ -109,9 +107,8 @@ public class Commit implements Serializable{
         return parents;
     }
 
-
-    public Map<String, Blob> getBlobs() {
-        return blobs;
+    public Map<String, String> getTracked() {
+        return tracked;
     }
 
     public File getFile() {
