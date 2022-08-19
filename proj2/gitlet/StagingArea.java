@@ -76,6 +76,34 @@ public class StagingArea implements Serializable {
 
 
     /**
+     * Remove file if it exists in stage area(track files for addition for not tracked by parent(s))
+     * If in added, remove it from stagingArea.
+     * If in current commit, remove and delete the real file from CWD.
+     *
+     * @param file File instance
+     * @return true if remove success.
+     *         false if fail (file not in neither stage-added nor commitTracked)
+     */
+    public boolean remove(File file){
+        String filePath=file.getPath();
+
+        if(added.containsKey(filePath)){
+            added.remove(filePath);
+            return true;
+        }
+
+        if(tracked.containsKey(filePath)){
+            if(file.exists()){
+                file.delete();
+            }
+            removed.add(filePath);
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
      * Perform a commit.
      * @return Map with file path as key and SHA1 id as value.
      */

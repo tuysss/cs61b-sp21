@@ -1,5 +1,8 @@
 package gitlet;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
 import static gitlet.Utils.*;
 import static gitlet.MyUtils.*;
 
@@ -14,17 +17,19 @@ public class Main {
         }
         String firstArg = args[0];
         switch(firstArg) {
-            case "init":
+            case "init":{
                 validateNumArgs(args,1);
                 Repository.init();
                 break;
-            case "add":
+            }
+            case "add": {
                 Repository.checkWorkingDir();
-                validateNumArgs(args,2);
-                String fileName=args[1];
+                validateNumArgs(args, 2);
+                String fileName = args[1];
                 new Repository().add(fileName);
                 break;
-            case "commit":
+            }
+            case "commit":{
                 Repository.checkWorkingDir();
                 validateNumArgs(args,2);
                 String message=args[1];
@@ -33,6 +38,14 @@ public class Main {
                 }
                 new Repository().commit(message);
                 break;
+            }
+            case "rm":{
+                Repository.checkWorkingDir();
+                validateNumArgs(args,2);
+                String fileName=args[1];
+                new Repository().remove(fileName);
+                break;
+            }
             default:
                 System.out.println("No command with that name exists.");
                 break;

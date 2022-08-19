@@ -54,7 +54,7 @@ public class Repository {
     });
 
     /**
-     * The commit that HEAD points to.
+     * The commit that HEAD points to. The current commit.
      */
     private final Lazy<Commit> HEADCommit = lazy(() -> getBranchHeadCommit(currentBranch.get()));
 
@@ -209,6 +209,20 @@ public class Repository {
         newCommit.save();
         setBranchHeadCommit(currentBranch.get(),newCommit.getHashId());
     }
+
+    /**
+     * Perform "rm" command.
+     * @param fileName
+     */
+    public void remove(String fileName){
+        File file = getFileFromCWD(fileName);
+        if(stagingArea.get().remove(file)){
+            stagingArea.get().save();
+        }else{
+            exit("No reason to remove the file.");
+        }
+    }
+
 
 
     /**
