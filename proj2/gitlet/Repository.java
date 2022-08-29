@@ -223,6 +223,24 @@ public class Repository {
         }
     }
 
+    public void log(){
+        StringBuilder logBuilder=new StringBuilder();
+        Commit currentCommit=HEADCommit.get();
+        while (true) {
+            logBuilder.append(currentCommit.getLog()).append("\n");
+            List<String> parentCommitIds=currentCommit.getParents();
+            if(parentCommitIds.size()==0){
+                break;
+            }
+            String firstParentCommitId = parentCommitIds.get(0);
+            currentCommit = Commit.getCommitFromFile(firstParentCommitId);
+        }
+        System.out.println(logBuilder);
+
+    }
+
+
+
 
 
     /**

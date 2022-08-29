@@ -46,6 +46,12 @@ public class Main {
                 new Repository().remove(fileName);
                 break;
             }
+            case "log":{
+                Repository.checkWorkingDir();
+                validateNumArgs(args,1);
+                new Repository().log();
+                break;
+            }
             default:
                 System.out.println("No command with that name exists.");
                 break;

@@ -69,6 +69,22 @@ public class Commit implements Serializable{
         file= getObjectFromFile(this.hashId);
     }
 
+    public String getLog(){
+        StringBuilder logBuilder=new StringBuilder();
+        logBuilder.append("===").append("\n");
+        logBuilder.append("commit").append(" ").append(hashId).append("\n");
+        if(parents.size()>1){
+            logBuilder.append("Merge:");
+            for(String parent: parents){
+                logBuilder.append(" ").append(parent,0,7);
+            }
+        }
+        logBuilder.append("Date:").append(" ").append(getTimestamp()).append("\n");
+        logBuilder.append(message).append("\n");
+        return logBuilder.toString();
+
+    }
+
     /**
      *  persistence the commit into .gitlet/objects folder
      */
