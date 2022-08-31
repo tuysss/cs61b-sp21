@@ -51,7 +51,7 @@ public class Commit implements Serializable{
         parents =new ArrayList<>();
         tracked =new TreeMap<>();
         hashId =generateHashId();
-        file= getObjectFromFile(this.hashId);
+        file= getCommitFile(this.hashId);
     }
 
     /**
@@ -66,7 +66,7 @@ public class Commit implements Serializable{
         this.tracked =tracked;
         this.date =new Date();
         this.hashId = generateHashId();
-        file= getObjectFromFile(this.hashId);
+        file= getCommitFile(this.hashId);
     }
 
     public String getLog(){
@@ -93,7 +93,7 @@ public class Commit implements Serializable{
     }
 
     public static Commit getCommitFromFile(String id){
-        return readObject(getObjectFromFile(id),Commit.class);
+        return readObject(getCommitFile(id),Commit.class);
     }
 
     /**

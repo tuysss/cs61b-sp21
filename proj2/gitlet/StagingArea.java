@@ -41,7 +41,9 @@ public class StagingArea implements Serializable {
 
 
     /**
-     * Add file(serialized blob) to StagingArea.
+     * Add file to StagingArea.
+     * 1.Staging an already-staged file overwrites the previous entry
+     *
      * If blob exists(i.e. file isn't changed), return false, no need to save.
      * @param file File instance
      * @return true if the stagingArea is changed.

@@ -37,15 +37,29 @@ public class MyUtils {
         }
     }
 
+    public static File getCommitFile(String id){
+        return getObjectFile(id,Commit.class);
+    }
+
+    public static File getBlobFile(String id){
+        return getObjectFile(id,Blob.class);
+    }
+
     /**
      *  Get the file of the object.
      * @param id the hashid/uid of commit or blob
      * @return the specific file that stores the object
      */
-    public static File getObjectFromFile(String id){
+    private static File getObjectFile(String id,Class expectedClass){
         String dirName=getObjectDirName(id);
         String fileName=getObjectFileName(id);
-        return join(Repository.OBJECTS_DIR,dirName,fileName);
+        if((Commit.class).equals(expectedClass)){
+            return join(Repository.COMMITS_DIR,dirName,fileName);
+        }else if(Blob.class.equals(expectedClass)){
+            return join(Repository.BLOBS_DIR,dirName,fileName);
+        }else{
+            throw new IllegalArgumentException("Object Type is neither commit nor blob.");
+        }
     }
 
     /**

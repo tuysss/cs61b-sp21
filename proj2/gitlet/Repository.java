@@ -32,6 +32,12 @@ public class Repository {
     /** The objects directory.     */
     public static final File OBJECTS_DIR=join(GITLET_DIR,"objects");
 
+    /* The commits directory. */
+    public static final File COMMITS_DIR=join(OBJECTS_DIR,"commits");
+
+    /** The blobs directory. */
+    public static final File BLOBS_DIR=join(OBJECTS_DIR,"blobs");
+
     /** The refs directory.     */
     public static final File REFS_DIR=join(GITLET_DIR,"refs");
 
@@ -104,6 +110,8 @@ public class Repository {
      *
      * .gitlet/          -- top level folder for all persistent data in your lab12 folder
      *    - objects/     -- folder containing all persistent data for blobs and commits
+     *          - blobs/
+     *          - commits/
      *    - refs/        -- stores pointers into commit objects in that data
      *          - heads/ -- pointers to the heads of branch
      *    - HEAD         -- the branch you currently have checked out (prefix+branch name)
@@ -223,6 +231,9 @@ public class Repository {
         }
     }
 
+    /**
+     *  Perform "log" command.
+     */
     public void log(){
         StringBuilder logBuilder=new StringBuilder();
         Commit currentCommit=HEADCommit.get();
@@ -236,11 +247,16 @@ public class Repository {
             currentCommit = Commit.getCommitFromFile(firstParentCommitId);
         }
         System.out.println(logBuilder);
-
     }
 
-
-
+    public void globalLog(){
+        StringBuilder globalLogBuilder=new StringBuilder();
+        List<String> globalCommits = plainFilenamesIn(COMMITS_DIR);
+        for (String commit : globalCommits) {
+            globalLogBuilder.append(commit).append("\n").append("\n");
+        }
+        System.out.println(globalLogBuilder);
+    }
 
 
     /**

@@ -39,7 +39,7 @@ public class Blob implements Serializable {
         String filePath=sourceFile.getPath();
         this.hashID=sha1(filePath,content);
         //尚未持久化，只是指向file对象
-        this.file=getObjectFromFile(hashID);
+        this.file= getBlobFile(hashID);
     }
 
     /**
@@ -55,7 +55,7 @@ public class Blob implements Serializable {
      * @return
      */
     public Blob fromFile(String hashID){
-        return readObject(getObjectFromFile(hashID),Blob.class);
+        return readObject(getBlobFile(hashID),Blob.class);
     }
 
     public String getHashID() {
