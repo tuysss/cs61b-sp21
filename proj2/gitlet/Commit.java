@@ -10,124 +10,93 @@ import java.util.*;
 import static gitlet.MyUtils.*;
 import static gitlet.Utils.*;
 
-/** Represents a gitlet commit object.
+/**
+ * Represents a gitlet commit object.
+ * A Commit is a snapshot of the entire project at one point.
  */
 public class Commit implements Serializable{
-
-    /** The message of this Commit. */
-    private final String message;
-
-    /** the global unique id calculated by SHA-1 algorithm */
-    private final String hashId;
-
-    /** time that commit being created */
-    private final Date date;
+    private String message;
+    private List<String> parents;
+    private Date timestamp;
+    /** The files this Commit tracks. filename-id.*/
+    private Map<String,String> blobs;
+    private String id;
 
     /**
-     *  last commits of this with SHA1 id.
-     *  By default, one parent.
-     *  If there is a merge, then two.
-     */
-    private final List<String> parents;
-
-    /** blobs that tracked by this commit,
-     * map of file path as key and SHA1 id as value
-     */
-    private final Map<String, String> tracked;
-
-    /**
-     * File to persistent this commit into.
-     */
-    private final File file;
-
-    /**
-     * Commit constructer called by "init" command.
-     * All repositories will automatically share this commit (have the same UID)
-     * and all commits in all repositories will trace back to it.
+     *  invoked by "init" command
      */
     public Commit(){
-        this.message="initial commit";
-        date =new Date(0);
-        parents =new ArrayList<>();
-        tracked =new TreeMap<>();
-        hashId =generateHashId();
-        file= getCommitFile(this.hashId);
+        this.message="init commit";
+        this.parents=new ArrayList<>();
+        this.timestamp=new Date(0);
+        this.blobs=new HashMap<>();
+        this.id=sha1(message,parents,timestamp,blobs);
     }
 
     /**
-     * Commit constructor called by "commit" command.
+     *  Invoked by "commit" command.
      * @param message
      * @param parents
-     * @param tracked
+     * @param stage
      */
-    public Commit(String message,List<String> parents,Map<String,String> tracked){
+    public Commit(String message,List<Commit> parents,Stage stage){
         this.message=message;
-        this.parents=parents;
-        this.tracked =tracked;
-        this.date =new Date();
-        this.hashId = generateHashId();
-        file= getCommitFile(this.hashId);
-    }
-
-    public String getLog(){
-        StringBuilder logBuilder=new StringBuilder();
-        logBuilder.append("===").append("\n");
-        logBuilder.append("commit").append(" ").append(hashId).append("\n");
-        if(parents.size()>1){
-            logBuilder.append("Merge:");
-            for(String parent: parents){
-                logBuilder.append(" ").append(parent,0,7);
-            }
+        this.parents=new ArrayList<>();
+        for (Commit parent : parents) {
+            this.parents.add(parent.getId());
         }
-        logBuilder.append("Date:").append(" ").append(getTimestamp()).append("\n");
-        logBuilder.append(message).append("\n");
-        return logBuilder.toString();
-
+        for (Map.Entry<String, String> entry : stage.getAdded().entrySet()) {
+            String filename=entry.getKey();
+            String blobId=entry.getValue();
+            blobs.put(filename,blobId);
+        }
+        for (String filename : stage.getRemoved()) {
+            blobs.remove(filename);
+        }
     }
 
-    /**
-     *  persistence the commit into .gitlet/objects folder
-     */
-    public void save(){
-        saveObjectToFile(file,this);
+    public String getFirstParent(){
+        if(parents.isEmpty()){
+            return "null";
+        }
+        return parents.get(0);
     }
 
-    public static Commit getCommitFromFile(String id){
-        return readObject(getCommitFile(id),Commit.class);
+    private String getTimestampAsString(){
+        DateFormat dateFormat=new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy z",Locale.ENGLISH);
+        return dateFormat.format(timestamp);
     }
 
-    /**
-     * using sha-1 algorithm, generate uid of commit,
-     * with its message+timestamp+BlobToString+parentToString
-     * @return hashId of this commit object
-     */
-    private String generateHashId(){
-        return sha1(getTimestamp(),message,parents.toString(), tracked.toString());
-    }
 
     public String getMessage() {
         return message;
-    }
-
-    public String getHashId() {
-        return hashId;
-    }
-
-    public String getTimestamp() {
-        // Thu Jan 1 00:00:00 1970 +0000
-        DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
-        return dateFormat.format(date);
     }
 
     public List<String> getParents() {
         return parents;
     }
 
-    public Map<String, String> getTracked() {
-        return tracked;
+    public Date getTimestamp() {
+        return timestamp;
     }
 
-    public File getFile() {
-        return file;
+    public Map<String, String> getBlobs() {
+        return blobs;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getCommitAsString(){
+        StringBuffer sb = new StringBuffer();
+        sb.append("===\n");
+        sb.append("commit " + this.id + "\n");
+        if (parents.size() == 2) {
+            sb.append("Merge: " + parents.get(0).substring(0, 7) + " " + parents.get(1).substring(0, 7) + "\n");
+        }
+        sb.append("Date: " + this.getTimestampAsString() + "\n");
+        sb.append(this.message + "\n\n");
+        return sb.toString();
     }
 }

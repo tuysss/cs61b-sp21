@@ -6,71 +6,44 @@ import static gitlet.MyUtils.*;
 import static gitlet.Utils.*;
 
 /**
- *  represent a gitlet Blob object.
- *  will be called by "gitlet add"
+ *  represent a file object.
  */
 public class Blob implements Serializable {
+    private String filename;
+    private String id;
+    private byte[] content;
+    private File sourceFile;
 
-    /** the global unique SHA-1 id of blob */
-    private final String hashID;
-
-    /**
-     * The source file from constructor.
-     * source points to file in CWD.
-     */
-    private final File source;
-
-    /**  store the content which read from file as byte[] */
-    private final byte[] content;
-
-    /**
-     * The file of this instance with the path generated from SHA1 id.
-     * File points to file in .gitlet/objects
-     */
-    private final File file;
-
-    /**
-     * Constructor of Blob.
-     * @param sourceFile
-     */
-    public Blob(File sourceFile){
-        this.source=sourceFile;
-        this.content=readContents(source);
-        String filePath=sourceFile.getPath();
-        this.hashID=sha1(filePath,content);
-        //尚未持久化，只是指向file对象
-        this.file= getBlobFile(hashID);
+    public Blob(String filename, File CWD) {
+        this.filename = filename;
+        this.sourceFile= join(CWD, filename);
+        if (sourceFile.exists()) {
+            this.content = readContents(sourceFile);
+            this.id = sha1(filename, content);
+        } else {
+            this.content = null;
+            this.id = sha1(filename);
+        }
     }
 
-    /**
-     * Save blob object into ./gitlet/objects
-     */
-    public void save(){
-        saveObjectToFile(file,this);
+    public boolean exists(){
+        return this.content!=null;
     }
 
-    /**
-     * Get a blob obj from file with uid.
-     * @param hashID
-     * @return
-     */
-    public Blob fromFile(String hashID){
-        return readObject(getBlobFile(hashID),Blob.class);
+    public String getContentAsString(){
+        return Utils.readContentsAsString(sourceFile);
     }
 
-    public String getHashID() {
-        return hashID;
+    public String getFilename() {
+        return filename;
     }
 
-    public File getSource() {
-        return source;
+    public String getId() {
+        return id;
     }
 
     public byte[] getContent() {
         return content;
     }
-
-    public File getFile() {
-        return file;
-    }
 }
+
