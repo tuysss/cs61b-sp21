@@ -69,9 +69,6 @@ class Utils {
      *  if FILE was deleted, and false otherwise.  Refuses to delete FILE
      *  and throws IllegalArgumentException unless the directory designated by
      *  FILE also contains a directory named .gitlet. */
-    /**
-     * 删除非目录的文件，如果该file(实质是目录)下含名为.gitlet的目录，不仅return false，还要抛出异常
-     */
     static boolean restrictedDelete(File file) {
         if (!(new File(file.getParentFile(), ".gitlet")).isDirectory()) {
             throw new IllegalArgumentException("not .gitlet working directory");
@@ -96,7 +93,6 @@ class Utils {
     /** Return the entire contents of FILE as a byte array.  FILE must
      *  be a normal file.  Throws IllegalArgumentException
      *  in case of problems.
-     *  序列化转byte数组
      *  */
     static byte[] readContents(File file) {
         if (!file.isFile()) {
@@ -112,7 +108,7 @@ class Utils {
     /** Return the entire contents of FILE as a String.  FILE must
      *  be a normal file.  Throws IllegalArgumentException
      *  in case of problems.
-     *  序列化转string*/
+    */
     static String readContentsAsString(File file) {
         return new String(readContents(file), StandardCharsets.UTF_8);
     }
@@ -121,7 +117,7 @@ class Utils {
      *  creating or overwriting it as needed.  Each object in CONTENTS may be
      *  either a String or a byte array.  Throws IllegalArgumentException
      *  in case of problems.
-     *  向文件中(非目录)写byte数组和string(将转化成byte数组)*/
+    */
     static void writeContents(File file, Object... contents) {
         try {
             if (file.isDirectory()) {
@@ -145,9 +141,6 @@ class Utils {
 
     /** Return an object of type T read from FILE, casting it to EXPECTEDCLASS.
      *  Throws IllegalArgumentException in case of problems. */
-    /**
-     * 从file中读，返回指定类型(在调用方法时传入)
-     */
     static <T extends Serializable> T readObject(File file,
                                                  Class<T> expectedClass) {
         try {
@@ -163,9 +156,6 @@ class Utils {
     }
 
     /** Write OBJ to FILE. */
-    /**
-     * 写入任何可序列化的obj/类。
-     */
     static void writeObject(File file, Serializable obj) {
         writeContents(file, serialize(obj));
     }
@@ -184,9 +174,6 @@ class Utils {
     /** Returns a list of the names of all plain files in the directory DIR, in
      *  lexicographic order as Java Strings.  Returns null if DIR does
      *  not denote a directory. */
-    /**
-     * 返回list of目录中的文字，以字典顺序，非树状结构
-     */
     static List<String> plainFilenamesIn(File dir) {
         String[] files = dir.list(PLAIN_FILES);
         if (files == null) {
@@ -224,9 +211,6 @@ class Utils {
     /* SERIALIZATION UTILITIES */
 
     /** Returns a byte array containing the serialized contents of OBJ. */
-    /**
-     * 序列化文件转byte数组
-     */
     static byte[] serialize(Serializable obj) {
         try {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
