@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.*;
 
-import static gitlet.MyUtils.saveObjectToFile;
-import static gitlet.Utils.*;
 
 /**
  *  The stagingArea presentation.

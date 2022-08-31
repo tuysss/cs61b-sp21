@@ -7,7 +7,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static gitlet.MyUtils.*;
 import static gitlet.Utils.*;
 
 /**
