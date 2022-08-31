@@ -29,7 +29,7 @@ public class Commit implements Serializable{
         this.parents=new ArrayList<>();
         this.timestamp=new Date(0);
         this.blobs=new HashMap<>();
-        this.id=sha1(message,parents,timestamp,blobs);
+        this.id=sha1(message,timestamp.toString());
     }
 
     /**
