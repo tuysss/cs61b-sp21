@@ -278,7 +278,7 @@ public class Repository {
     }
 
     private void writeStage(Stage stage){
-        writeContents(STAGE,stage);
+        writeObject(STAGE,stage);
     }
 
 
