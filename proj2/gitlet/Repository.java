@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.*;
 
 import static gitlet.Utils.*;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -231,6 +231,164 @@ public class Repository {
         System.out.println(sb);
     }
 
+    public void status(){
+        StringBuffer sb = new StringBuffer();
+
+        sb.append("=== Branches ===\n");
+        String headBranch = readContentsAsString(HEAD);
+        List<String> branches = plainFilenamesIn(BRANCH_HEADS_DIR);
+        for (String branch : branches) {
+            if (branch.equals(headBranch)) {
+                sb.append("*" + headBranch + "\n");
+            } else {
+                sb.append(branch + "\n");
+            }
+        }
+        sb.append("\n");
+
+        Stage stage = readStage();
+        sb.append("=== Staged Files ===\n");
+        for (String filename : stage.getAdded().keySet()) {
+            sb.append(filename + "\n");
+        }
+        sb.append("\n");
+
+        sb.append("=== Removed Files ===\n");
+        for (String filename : stage.getRemoved()) {
+            sb.append(filename + "\n");
+        }
+        sb.append("\n");
+
+        sb.append("=== Modifications Not Staged For Commit ===\n");
+        sb.append("\n");
+
+        sb.append("=== Untracked Files ===\n");
+        sb.append("\n");
+
+        System.out.println(sb);
+    }
+
+
+    /**
+     *  java gitlet.Main checkout -- [file name]
+     *
+     * Takes the version of the file as it exists in the head commit and puts it in the working directory,
+     *  overwriting the version of the file that’s already there if there is one.
+     * The new version of the file is not staged.
+     * @param filename the file in the head commit
+     */
+    public void checkoutFile(String filename){
+        Commit head = getHead();
+        String blobId = head.getBlobs().getOrDefault(filename,"");
+        checkoutBlobByBlobId(blobId);
+    }
+
+    private void checkoutBlobByBlobId(String blobId){
+        if("".equals(blobId)){
+            System.out.println("File does not exist in that commit.");
+            System.exit(0);
+        }
+        Blob blobToOverwrite=getBlobFromBlobId(blobId);
+        File file=join(CWD,blobId);
+        writeObject(file,blobToOverwrite);
+    }
+
+    private Blob getBlobFromBlobId(String blobId){
+        File file=join(BLOBS_DIR,blobId);
+        return readObject(file,Blob.class);
+    }
+
+
+    /**
+     * java gitlet.Main checkout [commit id] -- [file name]
+     *
+     * Takes the version of the file as it exists in the commit with the given id,
+     * and puts it in the working directory, overwriting the version of the file that’s already there if there is one.
+     * The new version of the file is not staged.
+     * @param commitId the specific version of commit
+     * @param filename
+     */
+    public void checkoutFileWithCommitId(String commitId,String filename){
+        Commit commit = getCommitFromId(commitId);
+        if(null==commit){
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        String blobId = commit.getBlobs().getOrDefault(filename,"");
+        checkoutBlobByBlobId(blobId);
+    }
+
+
+    /**
+     *  java gitlet.Main checkout [branch name]
+     *
+     * 1. Takes all files in the commit at the head of the given branch, and puts them in the working directory, overwriting the versions of the files that are already there if they exist.
+     * 2. Also, at the end of this command, the given branch will now be considered the current branch (HEAD).
+     * 3. Any files that are tracked in the current branch but are not present in the checked-out branch are deleted.
+     * 4. The staging area is cleared, unless the checked-out branch is the current branch.
+     * @param branchName the specific branch
+     */
+    public void checkoutBranch(String branchName){
+        File branchFile = getBranchFile(branchName);
+        if(branchFile==null){
+            exit("No such branch exists.");
+        }
+        String headBranchName = getHeadBranchName();
+        if(headBranchName.equals(branchName)){
+            exit("No need to checkout the current branch.");
+        }
+
+        Commit commitFromGivenBranch = getCommitFromBranchFile(branchFile);
+
+        // If a working file is untracked in the current branch
+        // and would be overwritten by the checkout
+        validateUntrackedFile(commitFromGivenBranch.getBlobs());
+
+        clearStage(readStage());
+
+        writeContents(HEAD,branchName);
+    }
+
+
+    /**
+     * If a working file is untracked in the current branch and would be overwritten by the blobs(checkout),
+     * warn and exit.
+     */
+    private void validateUntrackedFile(Map<String, String> blobs){
+        List<String> untrackedFiles = getUntrackedFiles();
+        if(untrackedFiles.isEmpty()){
+            return;
+        }
+        //TODO
+        for (String filename : untrackedFiles) {
+            String blobId = new Blob(filename, CWD).getId();
+            String otherId = blobs.getOrDefault(filename, "");
+            if (!otherId.equals(blobId)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+
+    }
+
+    private List<String> getUntrackedFiles() {
+        List<String> res = new ArrayList<>();
+        List<String> stageFiles = readStage().getStagedFilename();
+        Set<String> headFiles = getHead().getBlobs().keySet();
+        for (String filename : plainFilenamesIn(CWD)) {
+            if (!stageFiles.contains(filename) && !headFiles.contains(filename)) {
+                res.add(filename);
+            }
+        }
+        Collections.sort(res);
+        return res;
+    }
+
+
+
+
+
+
 
     /**
      * moving all staging dir's blob file to blobs dir.
@@ -341,6 +499,11 @@ public class Repository {
 
     void messageIncorrectOperands() {
         System.out.println("Incorrect operands.");
+        System.exit(0);
+    }
+
+    void exit(String message){
+        System.out.println(message);
         System.exit(0);
     }
 }
