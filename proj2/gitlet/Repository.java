@@ -298,4 +298,30 @@ public class Repository {
         }
     }
 
+    /**
+     * check things
+     */
+    void checkIfInitDirectoryExists() {
+        if (!GITLET_DIR.isDirectory()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            System.exit(0);
+        }
+    }
+
+    void checkCommandLength(int actual, int expected) {
+        if (actual != expected) {
+            messageIncorrectOperands();
+        }
+    }
+
+    void checkEqual(String actual, String expected) {
+        if (!actual.equals(expected)) {
+            messageIncorrectOperands();
+        }
+    }
+
+    void messageIncorrectOperands() {
+        System.out.println("Incorrect operands.");
+        System.exit(0);
+    }
 }
