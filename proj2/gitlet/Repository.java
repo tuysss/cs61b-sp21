@@ -47,7 +47,7 @@ public class Repository {
 
 
 
-     public static void init(){
+     public void init(){
         if(GITLET_DIR.exists()){
             message("A Gitlet version-control system already exists in the current directory.");
             System.exit(0);
