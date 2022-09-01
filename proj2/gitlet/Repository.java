@@ -58,7 +58,7 @@ public class Repository {
         BLOBS_DIR.mkdirs();
         REFS_DIR.mkdirs();
         BRANCH_HEADS_DIR.mkdirs();
-         writeContents(STAGE,new Stage());
+        writeObject(STAGE,new Stage());
         STAGING_DIR.mkdirs();
 
         // initial commit
