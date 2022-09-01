@@ -25,7 +25,7 @@ public class Commit implements Serializable{
      *  invoked by "init" command
      */
     public Commit(){
-        this.message="init commit";
+        this.message="initial commit";
         this.parents=new ArrayList<>();
         this.timestamp=new Date(0);
         this.blobs=new HashMap<>();
@@ -58,9 +58,10 @@ public class Commit implements Serializable{
     }
 
 
-    private String getTimestampAsString(){
-        DateFormat dateFormat=new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy z",Locale.ENGLISH);
-        return dateFormat.format(timestamp);
+    public String getTimestampAsString() {
+        // Thu Nov 9 20:00:05 2017 -0800
+        DateFormat df = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
+        return df.format(timestamp);
     }
 
 

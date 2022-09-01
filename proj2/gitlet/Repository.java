@@ -215,6 +215,23 @@ public class Repository {
     }
 
 
+    public void find(String message){
+        StringBuffer sb = new StringBuffer();
+        List<String> filenames = plainFilenamesIn(COMMITS_DIR);
+        for (String filename : filenames) {
+            Commit commit = getCommitFromId(filename);
+            if(message.equals(commit.getMessage())){
+                sb.append(commit.getId()).append("\n");
+            }
+        }
+        if (sb.length() == 0) {
+            System.out.println("Found no commit with that message.");
+            System.exit(0);
+        }
+        System.out.println(sb);
+    }
+
+
     /**
      * moving all staging dir's blob file to blobs dir.
      *
