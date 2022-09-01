@@ -41,9 +41,11 @@ public class Commit implements Serializable{
     public Commit(String message,List<Commit> parents,Stage stage){
         this.message=message;
         this.parents=new ArrayList<>();
+        this.timestamp=new Date();
         for (Commit parent : parents) {
             this.parents.add(parent.getId());
         }
+        this.blobs=parents.get(0).getBlobs();
         for (Map.Entry<String, String> entry : stage.getAdded().entrySet()) {
             String filename=entry.getKey();
             String blobId=entry.getValue();
@@ -52,14 +54,9 @@ public class Commit implements Serializable{
         for (String filename : stage.getRemoved()) {
             blobs.remove(filename);
         }
+        this.id = sha1(message, timestamp.toString(), parents.toString(), blobs.toString());
     }
 
-    public String getFirstParent(){
-        if(parents.isEmpty()){
-            return "null";
-        }
-        return parents.get(0);
-    }
 
     private String getTimestampAsString(){
         DateFormat dateFormat=new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy z",Locale.ENGLISH);
@@ -100,6 +97,9 @@ public class Commit implements Serializable{
     }
 
     public String getFirstParentId(){
+        if(parents.isEmpty()){
+            return "null";
+        }
         return parents.get(0);
     }
 }

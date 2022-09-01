@@ -243,11 +243,13 @@ public class Repository {
         String branchName = getHeadBranchName();
         File branchFile = getBranchFile(branchName);
         Commit head = getCommitFromBranchFile(branchFile);
-        if(head==null){
-            System.out.println("error! cannot find HEAD!");
-        }
-        return head;
 
+        if (head == null) {
+            System.out.println("error! cannot find HEAD!");
+            System.exit(0);
+        }
+
+        return head;
     }
 
 
