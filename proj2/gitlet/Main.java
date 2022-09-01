@@ -22,7 +22,7 @@ public class Main {
                 Repository.init();
                 break;
             }
-/*            case "add": {
+            case "add": {
                 Repository.checkWorkingDir();
                 validateNumArgs(args, 2);
                 String fileName = args[1];
@@ -51,7 +51,7 @@ public class Main {
                 validateNumArgs(args,1);
                 new Repository().log();
                 break;
-            }*/
+            }
             default:
                 System.out.println("No command with that name exists.");
                 break;

@@ -98,4 +98,8 @@ public class Commit implements Serializable{
         sb.append(this.message + "\n\n");
         return sb.toString();
     }
+
+    public String getFirstParentId(){
+        return parents.get(0);
+    }
 }
