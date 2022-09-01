@@ -34,7 +34,8 @@ public class Main {
                 validateNumArgs(args,2);
                 String message=args[1];
                 if (message.length() == 0) {
-                    exit("Please enter a commit message.");
+                    System.out.println("Please enter a commit message.");
+                    System.exit(0);
                 }
                 new Repository().commit(message);
                 break;
@@ -43,13 +44,19 @@ public class Main {
                 Repository.checkWorkingDir();
                 validateNumArgs(args,2);
                 String fileName=args[1];
-                new Repository().remove(fileName);
+                new Repository().rm(fileName);
                 break;
             }
             case "log":{
                 Repository.checkWorkingDir();
                 validateNumArgs(args,1);
                 new Repository().log();
+                break;
+            }
+            case "global-log":{
+                Repository.checkWorkingDir();
+                validateNumArgs(args,1);
+                new Repository().global_log();
                 break;
             }
             default:

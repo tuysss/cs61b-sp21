@@ -160,7 +160,7 @@ public class Repository {
         }
     }
 
-    public void Commit(String message){
+    public void commit(String message){
         if (message.equals("")) {
             System.out.println("Please enter a commit message.");
             System.exit(0);
