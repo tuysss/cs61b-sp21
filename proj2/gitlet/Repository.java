@@ -78,8 +78,8 @@ public class Repository {
     /**
      * 1. Staging an already-staged file overwrites the previous entry in the staging area with the new contents.
      * 2. If the current working version of the file is identical to the version in the current commit,
-     * do not stage it to be added, and remove it from the staging area if it is already there
-     * (as can happen when a file is changed, added, and then changed back to it’s original version).
+     *    do not stage it to be added, and remove it from the staging area if it is already there
+     *    (as can happen when a file is changed, added, and then changed back to it’s original version).
      * 3. The file will no longer be staged for removal (see gitlet rm), if it was at the time of the command.
      * @param filename
      */
@@ -94,25 +94,27 @@ public class Repository {
         Stage stage = readStage();
 
         String headBlobId=head.getBlobs().getOrDefault(filename,"");
-        String stageAddedId=stage.getAdded().getOrDefault(filename,"");
+        String stageId=stage.getAdded().getOrDefault(filename,"");
 
         Blob blob = new Blob(filename, CWD);
         String blobId = blob.getId();
 
+        //If the current working version of the file is identical to the version in the current commit
         if(blobId.equals(headBlobId)){
-            //no need to add to stage
-            if(blobId.equals(stageAddedId)){
-                //delete the file from staging
-                join(STAGING_DIR,stageAddedId).delete();
-                stage.getAdded().remove(stageAddedId);
-                stage.getRemoved().remove(stageAddedId);
+            //no need to add the file
+            if(blobId.equals(stageId)){
+                //delete the file from staging if it is already there
+                join(STAGING_DIR,stageId).delete();
+                stage.getAdded().remove(stageId);
+                //The file "rm" before will no longer be staged for removal
+                stage.getRemoved().remove(filename);
                 writeStage(stage);
             }
-        }else if(!blobId.equals(stageAddedId)){
+        }else if(!blobId.equals(stageId)){
             // update staging
             // del original, add the new version
-            if(!stageAddedId.equals("")){
-                join(STAGING_DIR,stageAddedId).delete();
+            if(!stageId.equals("")){
+                join(STAGING_DIR,stageId).delete();
             }
         }
 
