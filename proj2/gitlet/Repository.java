@@ -401,6 +401,30 @@ public class Repository {
         //writeContents(HEAD,branchName);
     }
 
+    private String getHeadCommitId() {
+        String branchName = getHeadBranchName();
+        File file = getBranchFile(branchName);
+        return readContentsAsString(file);
+    }
+
+
+    /**
+     *  java gitlet.Main rm-branch [branch name]
+     * Deletes the branch with the given name.
+     * @param branchName
+     */
+    public void rmBranch(String branchName){
+        File toRemove = join(BRANCH_HEADS_DIR, branchName);
+        if(!toRemove.exists()){
+            exit("A branch with that name does not exist.");
+        }
+        String headBranch = getHeadBranchName();
+        if(headBranch.equals(branchName)){
+            exit("Cannot remove the current branch.");
+        }
+        toRemove.delete();
+    }
+
 
 
 
