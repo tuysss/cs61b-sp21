@@ -387,7 +387,6 @@ public class Repository {
 
     /**
      * Creates a new branch with the given name, and points it at the current head commit.
-     * Throw an exception If a branch with the given name already exists.
      */
     public void branch(String branchName){
         File newBranchFile = join(BRANCH_HEADS_DIR, branchName);
@@ -397,8 +396,6 @@ public class Repository {
         Commit head = getHead();
         String headCommitId = head.getId();
         writeContents(newBranchFile,headCommitId);
-        //checkout [branch]
-        //writeContents(HEAD,branchName);
     }
 
     private String getHeadCommitId() {
