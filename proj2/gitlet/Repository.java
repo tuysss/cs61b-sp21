@@ -290,7 +290,7 @@ public class Repository {
         }
         Blob blobToOverwrite=getBlobFromBlobId(blobId);
         File file=join(CWD, blobToOverwrite.getFilename());
-        writeObject(file,blobToOverwrite);
+        writeContents(file,blobToOverwrite.getContent());
     }
 
     private Blob getBlobFromBlobId(String blobId){
@@ -326,6 +326,7 @@ public class Repository {
      * 2. Also, at the end of this command, the given branch will now be considered the current branch (HEAD).
      * 3. Any files that are tracked in the current branch but are not present in the checked-out branch are deleted.
      * 4. The staging area is cleared, unless the checked-out branch is the current branch.
+     * Essentially, checkout branch is switch to currently active head pointer.
      * @param branchName the specific branch
      */
     public void checkoutBranch(String branchName){
@@ -359,7 +360,6 @@ public class Repository {
         if(untrackedFiles.isEmpty()){
             return;
         }
-        //TODO
         for (String filename : untrackedFiles) {
             String blobId = new Blob(filename, CWD).getId();
             String otherId = blobs.getOrDefault(filename, "");
@@ -383,6 +383,24 @@ public class Repository {
         Collections.sort(res);
         return res;
     }
+
+
+    /**
+     * Creates a new branch with the given name, and points it at the current head commit.
+     * Throw an exception If a branch with the given name already exists.
+     */
+    public void branch(String branchName){
+        File newBranchFile = join(BRANCH_HEADS_DIR, branchName);
+        if(newBranchFile.exists()){
+            exit("A branch with that name already exists.");
+        }
+        Commit head = getHead();
+        String headCommitId = head.getId();
+        writeContents(newBranchFile,headCommitId);
+        //checkout [branch]
+        //writeContents(HEAD,branchName);
+    }
+
 
 
 
