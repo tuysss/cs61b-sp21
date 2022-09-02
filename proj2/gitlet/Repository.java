@@ -101,9 +101,9 @@ public class Repository {
 
         //If the current working version of the file is identical to the version in the current commit
         if(blobId.equals(headBlobId)){
-            //no need to add the file
-            if(blobId.equals(stageId)){
-                //delete the file from staging if it is already there
+            //but not identical to the version in current stage (happens when change the file back)
+            if(!blobId.equals(stageId)){
+                //delete the file from staging
                 join(STAGING_DIR,stageId).delete();
                 stage.getAdded().remove(stageId);
                 //The file "rm" before will no longer be staged for removal
