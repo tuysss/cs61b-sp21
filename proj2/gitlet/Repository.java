@@ -156,7 +156,7 @@ public class Repository {
         // If the file is tracked in the current commit
         if(blob.exists()&&blobId.equals(headId)){
             //remove the file from the working directory.
-            restrictedDelete(blobId);
+            restrictedDelete(file);
         }
     }
 
@@ -368,7 +368,6 @@ public class Repository {
                 System.exit(0);
             }
         }
-
     }
 
     private List<String> getUntrackedFiles() {
@@ -393,8 +392,7 @@ public class Repository {
         if(newBranchFile.exists()){
             exit("A branch with that name already exists.");
         }
-        Commit head = getHead();
-        String headCommitId = head.getId();
+        String headCommitId = getHeadCommitId();
         writeContents(newBranchFile,headCommitId);
     }
 
@@ -421,7 +419,6 @@ public class Repository {
         }
         toRemove.delete();
     }
-
 
 
 
