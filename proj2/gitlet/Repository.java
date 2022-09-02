@@ -158,6 +158,7 @@ public class Repository {
             //remove the file from the working directory.
             restrictedDelete(file);
         }
+        writeStage(stage);
     }
 
     public void commit(String message){
