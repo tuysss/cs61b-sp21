@@ -145,10 +145,10 @@ public class Repository {
 
         //Unstage the file if it is currently staged for addition.
         if(!stageId.equals("")){
-            stage.getAdded().remove(stageId);
+            stage.getAdded().remove(filename);
         }else{
             //stage it for removal.
-            stage.getRemoved().add(stageId);
+            stage.getRemoved().add(filename);
         }
 
         Blob blob=new Blob(filename,CWD);
