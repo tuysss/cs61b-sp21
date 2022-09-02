@@ -52,14 +52,14 @@ public class Repository {
             message("A Gitlet version-control system already exists in the current directory.");
             System.exit(0);
         }
-        GITLET_DIR.mkdirs();
-        OBJECTS_DIR.mkdirs();
-        COMMITS_DIR.mkdirs();
-        BLOBS_DIR.mkdirs();
-        REFS_DIR.mkdirs();
-        BRANCH_HEADS_DIR.mkdirs();
+        GITLET_DIR.mkdir();
+        OBJECTS_DIR.mkdir();
+        COMMITS_DIR.mkdir();
+        BLOBS_DIR.mkdir();
+        REFS_DIR.mkdir();
+        BRANCH_HEADS_DIR.mkdir();
         writeObject(STAGE,new Stage());
-        STAGING_DIR.mkdirs();
+        STAGING_DIR.mkdir();
 
         // initial commit
         Commit initCommit=new Commit();
