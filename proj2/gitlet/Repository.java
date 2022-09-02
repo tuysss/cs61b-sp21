@@ -289,7 +289,7 @@ public class Repository {
             System.exit(0);
         }
         Blob blobToOverwrite=getBlobFromBlobId(blobId);
-        File file=join(CWD,blobId);
+        File file=join(CWD, blobToOverwrite.getFilename());
         writeObject(file,blobToOverwrite);
     }
 
