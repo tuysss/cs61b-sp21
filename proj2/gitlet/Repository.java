@@ -41,7 +41,7 @@ public class Repository {
     /** pointer to latest version     */
     public static final File HEAD=join(GITLET_DIR,"HEAD");
 
-    public static final File STAGE=join(GITLET_DIR,"SATGE");
+    public static final File STAGE=join(GITLET_DIR,"stage");
 
     public static final File STAGING_DIR=join(GITLET_DIR,"staging");
 
@@ -71,7 +71,7 @@ public class Repository {
         File master=join(BRANCH_HEADS_DIR,branchName);
         writeContents(master,id);
 
-        //create HEAD    ???
+        //create HEAD
          writeContents(HEAD,branchName);
     }
 
@@ -86,8 +86,7 @@ public class Repository {
     public void add(String filename){
         File file=join(CWD,filename);
         if(!file.exists()){
-            System.out.println("File does exists.");
-            System.exit(0);
+            exit("File does not exist.");
         }
 
         Commit head = getHead();
@@ -141,8 +140,7 @@ public class Repository {
         String stageId = stage.getAdded().getOrDefault(filename, "");
 
         if(headId.equals("")&&stageId.equals("")){
-            System.out.println("No reason to remove the untracked file.");
-            System.exit(0);
+            exit("No reason to remove the file.");
         }
 
         //Unstage the file if it is currently staged for addition.
@@ -165,8 +163,7 @@ public class Repository {
 
     public void commit(String message){
         if (message.equals("")) {
-            System.out.println("Please enter a commit message.");
-            System.exit(0);
+            exit("Please enter a commit message.");
         }
 
         Commit head = getHead();
@@ -181,8 +178,7 @@ public class Repository {
         Stage stage = readStage();
         // If no files have been staged, abort.
         if (stage.isEmpty()) {
-            System.out.println("No changes added to the commit.");
-            System.exit(0);
+            exit("No changes added to the commit.");
         }
 
         Commit commit = new Commit(message, parents, stage);
