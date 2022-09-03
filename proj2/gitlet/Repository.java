@@ -104,7 +104,8 @@ public class Repository {
             if(!blobId.equals(stageId)){
                 //delete the file from staging
                 join(STAGING_DIR,stageId).delete();
-                stage.getAdded().remove(stageId);
+                //todo
+                stage.getAdded().remove(filename);
                 //The file "rm" before will no longer be staged for removal
                 stage.getRemoved().remove(filename);
                 writeStage(stage);
