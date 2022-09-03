@@ -16,113 +16,168 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
  *  @author tuysss
  */
 public class Repository {
+    /**
+     *
+     * List all instance variables of the Repository class here with a useful
+     * comment above them describing what that variable represents and how that
+     * variable is used. We've provided two examples for you.
+     */
 
-    /** The current working directory. */
-    public static final File CWD = new File(System.getProperty("user.dir"));
+    /**
+     * The current working directory.
+     */
+    public File CWD;
 
-    /** The .gitlet directory. */
-    public static final File GITLET_DIR = join(CWD, ".gitlet");
+    public Repository() {
+        this.CWD = new File(System.getProperty("user.dir"));
+        configDIRS();
+    }
 
-    /** The objects directory.     */
-    public static final File OBJECTS_DIR=join(GITLET_DIR,"objects");
+    public Repository(String cwd) {
+        this.CWD = new File(cwd);
+        configDIRS();
+    }
 
-    /** The commits directory. */
-    public static final File COMMITS_DIR=join(OBJECTS_DIR,"commits");
+    private void configDIRS() {
+        this.GITLET_DIR = join(CWD, ".gitlet");
+        this.STAGING_DIR = join(GITLET_DIR, "staging");
+        this.STAGE = join(GITLET_DIR, "stage");
+        this.BLOBS_DIR = join(GITLET_DIR, "blobs");
+        this.COMMITS_DIR = join(GITLET_DIR, "commits");
+        this.REFS_DIR = join(GITLET_DIR, "refs");
+        this.HEADS_DIR = join(REFS_DIR, "heads");
+        this.REMOTES_DIR = join(REFS_DIR, "remotes");
+        this.HEAD = join(GITLET_DIR, "HEAD");
+        this.CONFIG = join(GITLET_DIR, "config");
+    }
 
-    /** The blobs directory. */
-    public static final File BLOBS_DIR=join(OBJECTS_DIR,"blobs");
+    /**
+     * The .gitlet directory.
+     * <p>
+     * .gitlet
+     * -- staging
+     * -- [stage]
+     * -- blobs
+     * -- commits
+     * -- refs
+     *  -- heads -> [master][branch name]
+     *  -- remotes
+     *      -- [remote name] ->[branch name]
+     * -- [HEAD]
+     * -- [config]
+     */
+    public File GITLET_DIR;
 
-    /** The refs directory.     */
-    public static final File REFS_DIR=join(GITLET_DIR,"refs");
+    /**
+     * The staging directory, restores staging Blobs
+     */
+    public File STAGING_DIR;
 
-    /** The refs/heads directory,defined by init-commit-id     */
-    public static final File BRANCH_HEADS_DIR=join(REFS_DIR,"heads");
+    /**
+     * The Stage Object
+     */
+    public File STAGE;
 
-    /** pointer to latest version     */
-    public static final File HEAD=join(GITLET_DIR,"HEAD");
+    /**
+     * The Objects directory, stores committed blobs & commits
+     */
+    public File BLOBS_DIR;
+    public File COMMITS_DIR;
 
-    public static final File STAGE=join(GITLET_DIR,"stage");
+    /**
+     * The branches directory
+     */
+    public File REFS_DIR;
+    public File HEADS_DIR;
+    public File REMOTES_DIR;
+    /**
+     * stores current branch's name if it points to tip
+     */
+    public File HEAD;
+    // Note that in Gitlet, there is no way to be in a detached head state
 
-    public static final File STAGING_DIR=join(GITLET_DIR,"staging");
+    public File CONFIG;
 
-
-
-     public void init(){
-        if(GITLET_DIR.exists()){
-            message("A Gitlet version-control system already exists in the current directory.");
+    public void init() {
+        // Failure cases
+        if (GITLET_DIR.exists() && GITLET_DIR.isDirectory()) {
+            System.out.println("A Gitlet version-control system already exists in the current directory");
             System.exit(0);
         }
+
+        // create directories
         GITLET_DIR.mkdir();
-        OBJECTS_DIR.mkdir();
-        COMMITS_DIR.mkdir();
-        BLOBS_DIR.mkdir();
-        REFS_DIR.mkdir();
-        BRANCH_HEADS_DIR.mkdir();
-        writeObject(STAGE,new Stage());
         STAGING_DIR.mkdir();
+        writeObject(STAGE, new Stage());
+        BLOBS_DIR.mkdir();
+        COMMITS_DIR.mkdir();
+        REFS_DIR.mkdir();
+        HEADS_DIR.mkdir();
+        REMOTES_DIR.mkdir();
 
         // initial commit
-        Commit initCommit=new Commit();
-        writeCommitToFile(initCommit);
-        String id=initCommit.getId();
+        Commit initialCommit = new Commit();
+        writeCommitToFile(initialCommit);
+        String id = initialCommit.getId();
 
-        // create default branch: master
-        String branchName="master";
-        File master=join(BRANCH_HEADS_DIR,branchName);
-        writeContents(master,id);
+        // create branch: master
+        String branchName = "master";
+        writeContents(HEAD, branchName);
+        File master = join(HEADS_DIR, branchName);
+        writeContents(master, id);
 
-        //create HEAD
-         writeContents(HEAD,branchName);
+        // create HEAD
+        writeContents(HEAD, branchName);
+
+        writeContents(CONFIG, "");
     }
 
     /**
      * 1. Staging an already-staged file overwrites the previous entry in the staging area with the new contents.
      * 2. If the current working version of the file is identical to the version in the current commit,
-     *    do not stage it to be added, and remove it from the staging area if it is already there
-     *    (as can happen when a file is changed, added, and then changed back to it’s original version).
+     * do not stage it to be added, and remove it from the staging area if it is already there
+     * (as can happen when a file is changed, added, and then changed back to it’s original version).
      * 3. The file will no longer be staged for removal (see gitlet rm), if it was at the time of the command.
+     *
      * @param filename
      */
-    public void add(String filename){
-        File file=join(CWD,filename);
-        if(!file.exists()){
-            exit("File does not exist.");
+    public void add(String filename) {
+        File file = join(CWD, filename);
+        if (!file.exists()) {
+            System.out.println("File does not exist.");
+            System.exit(0);
         }
 
         Commit head = getHead();
         Stage stage = readStage();
-
-        String headBlobId=head.getBlobs().getOrDefault(filename,"");
-        String stageId=stage.getAdded().getOrDefault(filename,"");
+        // blob id
+        String headId = head.getBlobs().getOrDefault(filename, "");
+        String stageId = stage.getAdded().getOrDefault(filename, "");
 
         Blob blob = new Blob(filename, CWD);
         String blobId = blob.getId();
 
-        //If the current working version of the file is identical to the version in the current commit
-        if(blobId.equals(headBlobId)){
-            //but not identical to the version in current stage (happens when change the file back)
-            if(!blobId.equals(stageId)){
-                //delete the file from staging
-                join(STAGING_DIR,stageId).delete();
-                //todo:stage.getAdded().remove(blobId);
-                stage.getAdded().remove(filename);
-                //The file "rm" before will no longer be staged for removal
+        if (blobId.equals(headId)) {
+            // no need to add the file
+            if (!blobId.equals(stageId)) {
+                // del the file from staging
+                join(STAGING_DIR, stageId).delete();
+                stage.getAdded().remove(stageId);
                 stage.getRemoved().remove(filename);
                 writeStage(stage);
             }
-        }else if(!blobId.equals(stageId)){
+        } else if (!blobId.equals(stageId)) {
             // update staging
             // del original, add the new version
-            if(!stageId.equals("")){
-                join(STAGING_DIR,stageId).delete();
+            if (!stageId.equals("")) {
+                join(STAGING_DIR, stageId).delete();
             }
-        }
 
-        File stagedBlobFile = join(STAGING_DIR, blobId);
-        writeObject(stagedBlobFile, blob);
-        // change stage added files
-        stage.addFile(filename, blobId);
-        writeStage(stage);
+            writeObject(join(STAGING_DIR, blobId), blob);
+            // change stage added files
+            stage.addFile(filename, blobId);
+            writeStage(stage);
+        }
     }
 
     /**
@@ -171,10 +226,6 @@ public class Repository {
         Commit head = getHead();
         commitWith(message, List.of(head));
     }
-
-    /**
-     * Helper Functions
-     */
 
     private void commitWith(String message, List<Commit> parents) {
         Stage stage = readStage();
@@ -237,7 +288,7 @@ public class Repository {
 
         sb.append("=== Branches ===\n");
         String headBranch = readContentsAsString(HEAD);
-        List<String> branches = plainFilenamesIn(BRANCH_HEADS_DIR);
+        List<String> branches = plainFilenamesIn(HEADS_DIR);
         for (String branch : branches) {
             if (branch.equals(headBranch)) {
                 sb.append("*" + headBranch + "\n");
@@ -389,7 +440,7 @@ public class Repository {
      * Creates a new branch with the given name, and points it at the current head commit.
      */
     public void branch(String branchName){
-        File newBranchFile = join(BRANCH_HEADS_DIR, branchName);
+        File newBranchFile = join(HEADS_DIR, branchName);
         if(newBranchFile.exists()){
             exit("A branch with that name already exists.");
         }
@@ -410,7 +461,7 @@ public class Repository {
      * @param branchName
      */
     public void rmBranch(String branchName){
-        File toRemove = join(BRANCH_HEADS_DIR, branchName);
+        File toRemove = join(HEADS_DIR, branchName);
         if(!toRemove.exists()){
             exit("A branch with that name does not exist.");
         }
@@ -471,7 +522,7 @@ public class Repository {
     }
 
     private File getBranchFile(String branchName){
-        return join(BRANCH_HEADS_DIR,branchName);
+        return join(HEADS_DIR,branchName);
     }
 
     private Commit getCommitFromBranchFile(File branchFile){
@@ -496,7 +547,7 @@ public class Repository {
     }
 
 
-    private static void writeCommitToFile(Commit commit){
+    private void writeCommitToFile(Commit commit){
          File file=join(COMMITS_DIR,commit.getId());
          writeObject(file,commit);
     }
