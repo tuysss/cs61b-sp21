@@ -104,7 +104,7 @@ public class Repository {
             if(!blobId.equals(stageId)){
                 //delete the file from staging
                 join(STAGING_DIR,stageId).delete();
-                //todo
+                //todo:stage.getAdded().remove(blobId);
                 stage.getAdded().remove(filename);
                 //The file "rm" before will no longer be staged for removal
                 stage.getRemoved().remove(filename);
@@ -118,7 +118,8 @@ public class Repository {
             }
         }
 
-        writeObject(join(STAGING_DIR, blobId), blob);
+        File stagedBlobFile = join(STAGING_DIR, blobId);
+        writeObject(stagedBlobFile, blob);
         // change stage added files
         stage.addFile(filename, blobId);
         writeStage(stage);
@@ -501,15 +502,6 @@ public class Repository {
     }
 
 
-    /**
-     *  Pre check for git preforms.
-     */
-    public static void checkWorkingDir(){
-        if(!GITLET_DIR.exists()||!GITLET_DIR.isDirectory()){
-            message("Not in an initialized Gitlet directory.");
-            System.exit(0);
-        }
-    }
 
     /**
      * check things
