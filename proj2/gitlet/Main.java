@@ -88,6 +88,11 @@ public class Main {
                 repo.checkIfInitDirectoryExists();
                 repo.rmBranch(args[1]);
                 break;
+            case "reset":
+                repo.checkCommandLength(args.length, 2);
+                repo.checkIfInitDirectoryExists();
+                repo.reset(args[1]);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

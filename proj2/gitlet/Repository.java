@@ -404,7 +404,8 @@ public class Repository {
 
 
     /**
-     * If a working file is untracked in the current branch and would be overwritten by the blobs(checkout),
+     * If a working file is untracked in the current branch
+     * and would be overwritten by the blobs(checkout),
      * warn and exit.
      */
     private void validateUntrackedFile(Map<String, String> blobs){
@@ -472,8 +473,42 @@ public class Repository {
         toRemove.delete();
     }
 
+    /**
+     * Usage: java gitlet.Main reset [commit id]
+     *
+     * Description: Checks out all the files tracked by the given commit.
+     *              Removes tracked files that are not present in that commit.
+     *              Also moves the current branch’s head to that commit node.
+     *  The command is essentially checkout of an arbitrary commit that also changes the current branch head.
+     * @param commitId
+     */
+    public void reset(String commitId){
+        Commit commit = getCommitFromId(commitId);
+        if(commit==null){
+            exit("No commit with that id exists.");
+        }
 
+        //Checks out all the files tracked by the given commit.
+        Map<String, String> blobs = commit.getBlobs();
+        for (Map.Entry<String, String> entry : blobs.entrySet()) {
+            String filenameByGivenCommit=entry.getKey();
+            checkoutFileWithCommitId(commitId,filenameByGivenCommit);
+        }
 
+        //Removes tracked files that are not present in that commit.
+        Stage stage = readStage();
+        for (Map.Entry<String, String> entry : stage.getAdded().entrySet()) {
+            String fileStaged=entry.getKey();
+            if(!blobs.containsKey(fileStaged)){
+                stage.getAdded().remove(fileStaged);
+                stage.getRemoved().add(fileStaged);
+            }
+        }
+
+        //moves the current branch’s head to that commit node.
+        String headBranchName = getHeadBranchName();
+        writeContents(join(HEADS_DIR,headBranchName),commitId);
+    }
 
 
 
