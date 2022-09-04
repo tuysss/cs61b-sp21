@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -405,7 +406,7 @@ public class Repository {
 
     /**
      * If a working file is untracked in the current branch
-     * and would be overwritten by the blobs(checkout),
+     * and would be overwritten by the checkout/reset,
      * warn and exit.
      */
     private void validateUntrackedFile(Map<String, String> blobs){
@@ -487,23 +488,10 @@ public class Repository {
         if(commit==null){
             exit("No commit with that id exists.");
         }
+        validateUntrackedFile(commit.getBlobs());
 
-        //Checks out all the files tracked by the given commit.
-        Map<String, String> blobs = commit.getBlobs();
-        for (Map.Entry<String, String> entry : blobs.entrySet()) {
-            String filenameByGivenCommit=entry.getKey();
-            checkoutFileWithCommitId(commitId,filenameByGivenCommit);
-        }
-
-        //Removes tracked files that are not present in that commit.
-        Stage stage = readStage();
-        for (Map.Entry<String, String> entry : stage.getAdded().entrySet()) {
-            String fileStaged=entry.getKey();
-            if(!blobs.containsKey(fileStaged)){
-                stage.getAdded().remove(fileStaged);
-                stage.getRemoved().add(fileStaged);
-            }
-        }
+        replaceWorkingPlaceWithCommit(commit);
+        clearStage(readStage());
 
         //moves the current branch’s head to that commit node.
         String headBranchName = getHeadBranchName();
@@ -511,6 +499,41 @@ public class Repository {
     }
 
 
+    private void replaceWorkingPlaceWithCommit(Commit commit) {
+        clearWorkingSpace();
+
+        for (Map.Entry<String, String> item : commit.getBlobs().entrySet()) {
+            String filename = item.getKey();
+            String blobId = item.getValue();
+            File file = join(CWD, filename);
+            Blob blob = readObject(join(BLOBS_DIR, blobId), Blob.class);
+
+            writeContents(file, blob.getContent());
+        }
+    }
+
+    private void clearWorkingSpace() {
+        File[] files = CWD.listFiles(gitletFliter);
+        for (File file : files) {
+            delFile(file);
+        }
+    }
+
+    private void delFile(File file) {
+        if (file.isDirectory()) {
+            for (File f : file.listFiles()) {
+                delFile(f);
+            }
+        }
+        file.delete();
+    }
+
+    private FilenameFilter gitletFliter = new FilenameFilter() {
+        @Override
+        public boolean accept(File dir, String name) {
+            return !name.equals(".gitlet");
+        }
+    };
 
 
     /**
