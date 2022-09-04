@@ -384,7 +384,7 @@ public class Repository {
      */
     public void checkoutBranch(String branchName){
         File branchFile = getBranchFile(branchName);
-        if(branchFile==null){
+        if(branchFile==null||!branchFile.exists()){
             exit("No such branch exists.");
         }
         String headBranchName = getHeadBranchName();
@@ -392,13 +392,14 @@ public class Repository {
             exit("No need to checkout the current branch.");
         }
 
-        Commit commitFromGivenBranch = getCommitFromBranchFile(branchFile);
+        Commit commitFromGivenBranch = getCommitFromBranchName(branchName);
 
         // If a working file is untracked in the current branch
         // and would be overwritten by the checkout
         validateUntrackedFile(commitFromGivenBranch.getBlobs());
 
         clearStage(readStage());
+        replaceWorkingPlaceWithCommit(commitFromGivenBranch);
 
         writeContents(HEAD,branchName);
     }
@@ -418,8 +419,7 @@ public class Repository {
             String blobId = new Blob(filename, CWD).getId();
             String otherId = blobs.getOrDefault(filename, "");
             if (!otherId.equals(blobId)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                System.exit(0);
+                exit("There is an untracked file in the way; delete it, or add and commit it first.");
             }
         }
     }
@@ -442,12 +442,12 @@ public class Repository {
      * Creates a new branch with the given name, and points it at the current head commit.
      */
     public void branch(String branchName){
-        File newBranchFile = join(HEADS_DIR, branchName);
-        if(newBranchFile.exists()){
+        File branch = join(HEADS_DIR, branchName);
+        if(branch.exists()){
             exit("A branch with that name already exists.");
         }
         String headCommitId = getHeadCommitId();
-        writeContents(newBranchFile,headCommitId);
+        writeContents(branch,headCommitId);
     }
 
     private String getHeadCommitId() {
@@ -586,6 +586,11 @@ public class Repository {
     private Commit getCommitFromBranchFile(File branchFile){
         String id = readContentsAsString(branchFile);
         return getCommitFromId(id);
+    }
+
+    private Commit getCommitFromBranchName(String branchName) {
+        File file = getBranchFile(branchName);
+        return getCommitFromBranchFile(file);
     }
 
     private Commit getCommitFromId(String CommitId){
