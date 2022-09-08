@@ -350,6 +350,10 @@ public class Repository {
         File file=join(BLOBS_DIR,blobId);
         return readObject(file,Blob.class);
     }
+    private void checkoutFileFromBlob(Blob blob){
+        File file=join(BLOBS_DIR,blob.getFilename());
+        writeContents(file,blob);
+    }
 
 
     /**
@@ -375,11 +379,11 @@ public class Repository {
     /**
      *  java gitlet.Main checkout [branch name]
      *
-     * 1. Takes all files in the commit at the head of the given branch, and puts them in the working directory, overwriting the versions of the files that are already there if they exist.
-     * 2. Also, at the end of this command, the given branch will now be considered the current branch (HEAD).
-     * 3. Any files that are tracked in the current branch but are not present in the checked-out branch are deleted.
-     * 4. The staging area is cleared, unless the checked-out branch is the current branch.
-     * Essentially, checkout branch is switch to currently active head pointer.
+     * To prepare for working on <branch>, switch to it by updating the index(here:stage)
+     * and the files in the working tree, and by pointing HEAD at the branch.
+     * Local modifications to the files in the working tree are kept,so that they can be committed to the <branch>.
+     * 检出一个branch/commit，将快照更新到stage和cwd，做简单合并(不丢弃cwd的更改)。
+     * checkout commit/branch类似，branch多一步Head指向branch
      * @param branchName the specific branch
      */
     public void checkoutBranch(String branchName){
@@ -511,6 +515,220 @@ public class Repository {
             writeContents(file, blob.getContent());
         }
     }
+
+
+    /**
+     * java gitlet.Main merge [branch name]
+     * @param otherBranchName
+     */
+    public void merge(String otherBranchName){
+        //todo
+        // Failure cases
+        Stage stage = readStage();
+        if(!stage.isEmpty()){
+            exit("You have uncommitted changes.");
+        }
+        File otherBranch = getBranchFile(otherBranchName);
+        if(!otherBranch.exists()){
+            exit("A branch with that name does not exist.");
+        }
+        String headBranchName = getHeadBranchName();
+        if(otherBranchName.equals(headBranchName)){
+            exit("Cannot merge a branch with itself.");
+        }
+
+        Commit head=getCommitFromBranchName(headBranchName);
+        Commit other=getCommitFromBranchFile(otherBranch);
+        Commit lca=getLatestCommitAncestor(head,other);
+
+        //2.1 lca==other <-- ... <-- HEAD
+        if(lca.getId().equals(other.getId())){
+            exit("Given branch is an ancestor of the current branch.");
+        }
+
+        //2.2 lca==HEAD <-- ... <-- other
+        //     checkout
+        if(lca.getId().equals(head.getId())){
+            checkoutBranch(otherBranchName);
+            exit("Current branch fast-forwarded.");
+        }
+
+        // 3. merge
+        mergeWithLca(lca,head,other);
+        String msg = "Merged " + otherBranchName + " into " + headBranchName + ".";
+        List<Commit> parents=List.of(head,other);
+        commitWith(msg,parents);
+    }
+
+    /**
+     * Helper of merge
+     */
+    private Commit getLatestCommitAncestor(Commit head,Commit other){
+        Set<String> headAncestors = bfsFromCommit(head);
+
+        Queue<Commit> otherQueue=new LinkedList<>();
+        otherQueue.add(other);
+        while(!otherQueue.isEmpty()){
+            Commit commit = otherQueue.poll();
+            if(headAncestors.contains(commit)){
+                return commit;
+            }
+            if(!commit.getParents().isEmpty()){
+                for (String parent : commit.getParents()) {
+                    otherQueue.add(getCommitFromId(parent));
+                }
+            }
+        }
+        return new Commit();
+    }
+
+    /**
+     *  Helper of merge.
+     */
+    private Set<String> bfsFromCommit(Commit head){
+        Set<String> res=new HashSet<>();
+        Queue<Commit> queue=new LinkedList<>();
+        queue.add(head);
+        while(!queue.isEmpty()){
+            Commit commit = queue.poll();
+            res.add(commit.getId());
+            if(!res.contains(commit.getId())&&!commit.getParents().isEmpty()){
+                for (String parent : commit.getParents()) {
+                    res.add(parent);
+                }
+            }
+        }
+        return res;
+    }
+
+    private void mergeWithLca(Commit lca,Commit head,Commit other){
+        Set<String> filenames = getAllFilenames(lca, head, other);
+
+        List<String> remove=new LinkedList<>();
+        List<String> rewrite=new LinkedList<>();
+        List<String> conflict=new LinkedList<>();
+
+        // If an untracked file in the current commit would be overwritten or deleted by the merge
+        List<String> untrackedFiles = getUntrackedFiles();
+        for (String untrackedFile : untrackedFiles) {
+            if(filenames.contains(untrackedFile)){
+                exit("There is an untracked file in the way; delete it, or add and commit it first.");
+            }
+        }
+
+        for (String filename : filenames) {
+            String lId=lca.getBlobs().getOrDefault(filename,"");
+            String hId = head.getBlobs().getOrDefault(filename, "");
+            String oId = other.getBlobs().getOrDefault(filename, "");
+
+            //other==lca || head==other
+            if(oId.equals(lId)||hId.equals(oId)){
+                continue;
+            }
+            if(lId.equals(hId)){
+                if(oId.equals("")) {
+                    //lca==head,other !exist --> removed & untracked
+                    remove.add(filename);
+                }else{
+                    //lca==head(/both absent)!=other
+                    rewrite.add(filename);
+                }
+            }else{
+                conflict.add(filename);
+            }
+        }
+
+        if(!remove.isEmpty()){
+            for (String filename : remove) {
+                rm(filename);
+            }
+        }
+
+        //checkout & stage
+        if(!rewrite.isEmpty()){
+            for (String filename : rewrite) {
+                String oId=other.getBlobs().getOrDefault(filename,"");
+                Blob otherBlob = getBlobFromBlobId(oId);
+                checkoutFileFromBlob(otherBlob);
+                add(filename);
+            }
+        }
+
+        if(!conflict.isEmpty()){
+            for (String filename : conflict) {
+                String hId=head.getBlobs().getOrDefault(filename,"");
+                String oId=other.getBlobs().getOrDefault(filename,"");
+                String headContent=readContentFromBlobIdAsString(hId);
+                String otherContent = readContentFromBlobIdAsString(oId);
+                String content = getConflictFile(headContent.split("\n"),
+                        otherContent.split("\n"));
+                rewriteFile(filename, content);
+                System.out.println("Encountered a merge conflict.");
+            }
+        }
+    }
+
+    private String readContentFromBlobIdAsString(String blobId){
+        if(blobId.equals("")){
+            return "";
+        }
+        return getBlobFromBlobId(blobId).getContentAsString();
+    }
+
+    private String getConflictFile(String[] head,String[] other){
+        StringBuffer sb=new StringBuffer();
+        int len1=head.length,len2=other.length;
+        int i=0,j=0;
+        while(i<len1&&j<len2){
+            if(head[i].equals(other[j])){
+                sb.append(head[i]);
+            }else{
+                sb.append(getConflictContent(head[i],other[j]));
+            }
+            i++;
+            j++;
+        }
+        // head.len > other.len
+        while (i < len1) {
+            sb.append(getConflictContent(head[i], ""));
+            i++;
+        }
+        // head.len < other.len
+        while (j < len1) {
+            sb.append(getConflictContent("", other[j]));
+            j++;
+        }
+        return sb.toString();
+    }
+
+    private String getConflictContent(String head, String other) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("<<<<<<< HEAD\n");
+        // contents of file in current branch
+        sb.append(head.equals("") ? head : head + "\n");
+        sb.append("=======\n");
+        // contents of file in given branch
+        sb.append(other.equals("") ? other : other + "\n");
+        sb.append(">>>>>>>\n");
+        return sb.toString();
+    }
+
+    private void rewriteFile(String filename, String content) {
+        File file = join(CWD, filename);
+        writeContents(file, content);
+    }
+
+
+
+    private Set<String> getAllFilenames(Commit lca,Commit head,Commit other){
+        HashSet<String> set = new HashSet<>();
+        set.addAll(lca.getBlobs().keySet());
+        set.addAll(head.getBlobs().keySet());
+        set.addAll(other.getBlobs().keySet());
+        return set;
+    }
+
+
 
     private void clearWorkingSpace() {
         File[] files = CWD.listFiles(gitletFliter);
