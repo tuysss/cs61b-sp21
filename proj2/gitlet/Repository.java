@@ -522,7 +522,6 @@ public class Repository {
      * @param otherBranchName
      */
     public void merge(String otherBranchName){
-        //todo
         // Failure cases
         Stage stage = readStage();
         if(!stage.isEmpty()){
@@ -594,7 +593,7 @@ public class Repository {
             res.add(commit.getId());
             if(!res.contains(commit.getId())&&!commit.getParents().isEmpty()){
                 for (String parent : commit.getParents()) {
-                    res.add(parent);
+                    queue.add(getCommitFromId(parent));
                 }
             }
         }
