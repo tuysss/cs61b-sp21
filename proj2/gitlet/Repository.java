@@ -352,7 +352,7 @@ public class Repository {
     }
     private void checkoutFileFromBlob(Blob blob){
         File file=join(BLOBS_DIR,blob.getFilename());
-        writeContents(file,blob);
+        writeContents(file,blob.getContent());
     }
 
 
